@@ -88,7 +88,10 @@ const prepareInputs = (component, instance) => {
     component: component.component,
     name: component.name,
     stage: component.stage || instance.stage,
-    inputs: Object.assign({}, instance.inputs, component.inputs)
+    inputs: Object.assign({}, instance.globals, component.inputs, {
+      // also add globalInputs property, in case component is injected recursively
+      globals: instance.globals
+    })
   }
 }
 

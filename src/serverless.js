@@ -23,6 +23,13 @@ class AwsSSMDocument extends Component {
     if (Array.isArray(inputs.components)) {
       components = arrayToObject(inputs.components)
     } else if (typeof inputs.components === 'object') {
+      // set components names
+      for (const componentName in inputs.components) {
+        // if not already set
+        if (!inputs.components[componentName].name) {
+          inputs.components[componentName].name = componentName
+        }
+      }
     } else {
       throw new Error(`Cannot parse "components" inputs.`)
     }

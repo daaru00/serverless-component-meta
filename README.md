@@ -44,7 +44,9 @@ stage: dev                       # (optional) serverless dashboard stage. defaul
 
 inputs:
   autoDiscovery: './**/serverless.yml'  # (optional) find serverless components declaration files using file glob
-  components:                           # (required) components list.
+  globalInputs:                         # (required)  global inputs will be merged into sub-components
+    prop: value
+  components:                           # (required) components list
     - component: aws-lambda
       name: my-lambda
       inputs:
@@ -65,14 +67,16 @@ Components can be also described as object, In this configuration the object key
 #..
 
 inputs:
+  components:
     my-lambda:
       component: aws-lambda
       inputs:
         src: ./my-service/
         handler: index.handler
 
-    my-other-lambda:
+    my-lambda2:
       component: aws-lambda
+      name: 'my-other-lambda'    # (optional) name can be also override
       inputs:
         src: ./my-other-service/
         handler: index.handler
@@ -87,12 +91,13 @@ Components files can be discovered using multiple glob patterns:
 
 inputs:
   autoDiscovery: 
-    - 'components/**/serverless.yml'     # include all files in a directory
-    - '!components/x/**/serverless.yml'  # then, exclude a sub directory
-    - 'components/x/serverless.yml'      # then, re-include a single file
+    - 'components/**/serverless.yml'       # include all files in a directory
+    - '!components/not/**/serverless.yml'  # then, exclude a sub directory
+    - 'components/not/serverless.yml'      # then, re-include a single file
 ```
 
-Note that you can also use an other file's name:
+Note that you can also use an other file's name. 
+With configuration you can use files like `lambda-user.yml`, `lambda-order.yml`, `bucket-media.yml`.
 
 ```yml
 # serverless.yml
@@ -116,6 +121,46 @@ inputs:
     - 'components/**/*.yaml'
     - 'components/**/*.json'
 ```
+
+You can also use a trick and create a recursive structure:
+
+```yml
+# serverless.yml
+
+#..
+
+inputs:
+  globals: # global inputs are merged in all children, and recursively into their children
+    prop: value
+  components:
+    my-lambda:
+      component: aws-lambda
+      inputs:
+        src: ./my-service/
+        handler: index.handler
+
+    sub-components:
+      component: meta 
+      globals: # global inputs can be overrides across the relation graph
+        prop: value
+      inputs:
+        components:
+
+          my-lambda2:
+            component: aws-lambda
+            inputs:
+              src: ./my-other-service/
+              handler: index.handler
+
+          my-lambda3:
+            component: aws-lambda
+            inputs:
+              src: ./my-other-service2/
+              handler: index.handler
+```
+
+NOTE: At the moment the `src` property is not transformed or re-based. 
+All paths are relative where deploy is triggered.
 
 ### 4. Deploy
 
