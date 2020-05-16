@@ -43,6 +43,7 @@ app: myApp                       # (optional) serverless dashboard app. default 
 stage: dev                       # (optional) serverless dashboard stage. default is dev.
 
 inputs:
+  src: .                                # (required) upload definition files
   autoDiscovery: './**/serverless.yml'  # (optional) find serverless components declaration files using file glob
   globalInputs:                         # (required)  global inputs will be merged into sub-components
     prop: value
@@ -67,6 +68,7 @@ Components can be also described as object, In this configuration the object key
 #..
 
 inputs:
+  src: .
   components:
     my-lambda:
       component: aws-lambda
@@ -90,6 +92,7 @@ Components files can be discovered using multiple glob patterns:
 #..
 
 inputs:
+  src: .
   autoDiscovery: 
     - 'components/**/serverless.yml'       # include all files in a directory
     - '!components/not/**/serverless.yml'  # then, exclude a sub directory
@@ -105,6 +108,7 @@ With configuration you can use files like `lambda-user.yml`, `lambda-order.yml`,
 #..
 
 inputs:
+  src: .
   autoDiscovery: 'components/**/*.yml'
 ```
 
@@ -116,10 +120,24 @@ Even also with JSON format:
 #..
 
 inputs:
+  src: .
   autoDiscovery: 
     - 'components/**/*.yml'
     - 'components/**/*.yaml'
     - 'components/**/*.json'
+```
+
+Playing with uploaded source code:
+
+```yml
+# serverless.yml
+
+#..
+
+inputs:
+  src: '/components'  # will upload only "./components" directory
+  autoDiscovery: 
+    - './**/*.yml'    # this will match all files in uploaded "./components" directory
 ```
 
 You can also use a trick and create a recursive structure:

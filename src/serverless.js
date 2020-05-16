@@ -43,8 +43,6 @@ class AwsSSMDocument extends Component {
       components = arrayToObject(files.map(loadComponentFile), components)
     }
 
-    log(components)
-
     // Deploy components
     const deployPromises = []
     for (const componentName in components) {
@@ -66,12 +64,14 @@ class AwsSSMDocument extends Component {
     // Remove components
     const removePromises = []
     if (this.state.outputs && Object.keys(this.state.outputs).length > 0) {
-      const componentsToRemove = Object.keys(this.state.outputs).filter(
-        (output) => Object.keys(components).includes(output.name) === false
+      const deployedServices = Object.keys(components)
+      let componentsToRemove = Object.keys(this.state.outputs)
+      componentsToRemove = componentsToRemove.filter(
+        (componentName) => deployedServices.includes(componentName) === false
       )
       for (const componentName of componentsToRemove) {
-        const component = componentsToRemove[componentName]
-        log(`Removing component ${componentName}..`)
+        const component = this.state.outputs[componentName]
+        log(`Removing component ${component.name}..`)
         removePromises.push(
           sdk
             .remove({
@@ -93,11 +93,9 @@ class AwsSSMDocument extends Component {
     await Promise.all(removePromises)
     const instances = await Promise.all(deployPromises)
 
-    log(instances)
-
     // Update state
     for (const instance of instances) {
-      this.state.outputs[instance.outputs.name] = instance.outputs
+      this.state.outputs[instance.outputs.name] = instance
     }
 
     // Export outputs
