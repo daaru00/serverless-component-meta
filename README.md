@@ -130,7 +130,7 @@ You can also use a trick and create a recursive structure:
 #..
 
 inputs:
-  globals: # global inputs are merged in all children, and recursively into their children
+  globals:               # global inputs are merged in all children, and recursively into their children
     prop: value
   components:
     my-lambda:
@@ -141,7 +141,7 @@ inputs:
 
     sub-components:
       component: meta 
-      globals: # global inputs can be overrides across the relation graph
+      globals:           # global inputs can be overrides across the relation graph
         prop: value
       inputs:
         components:

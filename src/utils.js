@@ -1,6 +1,6 @@
 const glob = require('glob-all')
 const { ServerlessSDK } = require('@serverless/platform-client')
-const { resolveVariables, readFileSync } = require('@serverless/components/src/cli/utils')
+const { fileExistsSync, readFileSync, resolveVariables } = require('imported-utils.js')
 
 /**
  * Console log replacement
@@ -20,6 +20,9 @@ const logError = (msg) => console.error(msg) // eslint-disable-line
  */
 const arrayToObject = (array, obj = {}) => {
   return array.reduce((previousValue, currentValue) => {
+    if (!currentValue || !currentValue.name) {
+      return previousValue
+    }
     previousValue[currentValue.name] = currentValue
     return previousValue
   }, obj)
@@ -58,6 +61,9 @@ const findFiles = (baseDir, patterns) => {
  * @returns {object}
  */
 const loadComponentFile = (file) => {
+  if (!fileExistsSync(file)) {
+    throw new Error(`File ${file} does not exist`)
+  }
   let content = readFileSync(file)
   content = resolveVariables(content)
   if (!content.name) {
@@ -79,18 +85,21 @@ const loadComponentFile = (file) => {
 /**
  * Prepare inputs
  * @param {object} component
+ * @param {object} inputs
  * @param {object} instance
  */
-const prepareInputs = (component, instance) => {
+const prepareInputs = (component, inputs, instance) => {
+  inputs.globals = inputs.globals || {}
+
   return {
     org: component.org || instance.org,
     app: component.app || instance.app,
     component: component.component,
     name: component.name,
     stage: component.stage || instance.stage,
-    inputs: Object.assign({}, instance.globals, component.inputs, {
+    inputs: Object.assign({}, inputs.globals, component.inputs, {
       // also add globalInputs property, in case component is injected recursively
-      globals: instance.globals
+      globals: inputs.globals
     })
   }
 }

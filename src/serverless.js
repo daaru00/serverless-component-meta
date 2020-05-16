@@ -19,15 +19,15 @@ class AwsSSMDocument extends Component {
     const sdk = getServerlessSdk(inputs.accessKey, this.org)
 
     // Load components
-    let components = {}
+    let { components } = inputs
     if (Array.isArray(inputs.components)) {
       components = arrayToObject(inputs.components)
     } else if (typeof inputs.components === 'object') {
       // set components names
       for (const componentName in inputs.components) {
         // if not already set
-        if (!inputs.components[componentName].name) {
-          inputs.components[componentName].name = componentName
+        if (components[componentName] && !components[componentName].name) {
+          components[componentName].name = componentName
         }
       }
     } else {
@@ -43,37 +43,38 @@ class AwsSSMDocument extends Component {
       components = arrayToObject(files.map(loadComponentFile), components)
     }
 
+    log(components)
+
     // Deploy components
     const deployPromises = []
-    for (const component of components) {
+    for (const componentName in components) {
+      const component = components[componentName]
       // Deploy and also save parameters to future removing
-      log(`Deploying component ${component}..`)
-      const options = prepareInputs(component, this)
+      log(`Deploying component ${component.name}..`)
+      const options = prepareInputs(component, inputs, this)
       deployPromises.push(
         sdk
           .deploy(options)
           .then((response) => {
-            log(`Component ${component} deployed successfully!`)
+            log(`Component ${component.name} deployed successfully!`)
             return response
           })
           .then((response) => Object.assign(response, options))
-          .catch((err) => {
-            logError(`Error during component ${component} deploy: ${err.message}`)
-          })
       )
     }
 
     // Remove components
     const removePromises = []
-    if (this.state.outputs && Array.isArray(this.state.outputs) && this.state.outputs.length > 0) {
-      const componentsToRemove = this.state.outputs.filter(
-        (output) => Object.values(components).includes(output.name) === false
+    if (this.state.outputs && Object.keys(this.state.outputs).length > 0) {
+      const componentsToRemove = Object.keys(this.state.outputs).filter(
+        (output) => Object.keys(components).includes(output.name) === false
       )
-      for (const component of componentsToRemove) {
-        log(`Removing component ${component}..`)
+      for (const componentName of componentsToRemove) {
+        const component = componentsToRemove[componentName]
+        log(`Removing component ${componentName}..`)
         removePromises.push(
           sdk
-            .deploy({
+            .remove({
               org: component.org || this.org,
               app: component.app || this.app,
               component: component.component || this.component,
@@ -82,10 +83,7 @@ class AwsSSMDocument extends Component {
               inputs: component.inputs
             })
             .then(() => {
-              log(`Component ${component} deployed successfully!`)
-            })
-            .catch((err) => {
-              logError(`Error during component ${component} remove: ${err.message}`)
+              log(`Component ${component.name} removed successfully!`)
             })
         )
       }
@@ -93,10 +91,14 @@ class AwsSSMDocument extends Component {
 
     // Wait for all promises ends
     await Promise.all(removePromises)
-    const outputs = await Promise.all(deployPromises)
+    const instances = await Promise.all(deployPromises)
+
+    log(instances)
 
     // Update state
-    this.state.outputs = arrayToObject(outputs)
+    for (const instance of instances) {
+      this.state.outputs[instance.outputs.name] = instance.outputs
+    }
 
     // Export outputs
     return this.state.outputs
@@ -121,7 +123,7 @@ class AwsSSMDocument extends Component {
       const removePromises = []
       removePromises.push(
         sdk
-          .deploy({
+          .remove({
             org: component.org || this.org,
             app: component.app || this.app,
             component: component.component || this.component,

@@ -6,7 +6,6 @@ stage: dev
 
 inputs:
   region: "${env:AWS_DEFAULT_REGION}"
-  autoDiscovery: './**/*.yml'
   components:
   
     my-lambda:
