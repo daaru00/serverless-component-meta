@@ -1,0 +1,23 @@
+org: daaru
+app: test-meta
+name: meta
+component: meta@dev
+stage: dev
+
+inputs:
+  region: "${env:AWS_DEFAULT_REGION}"
+  autoDiscovery: './**/*.yml'
+  components:
+  
+    my-lambda:
+      component: aws-lambda
+      inputs:
+        src: ./my-service/
+        handler: index.handler
+
+    my-other-lambda:
+      component: aws-lambda
+      inputs:
+        src: ./my-other-service/
+        handler: index.handler
+  

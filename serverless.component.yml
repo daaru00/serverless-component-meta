@@ -1,0 +1,10 @@
+name: meta
+version: 0.0.1
+author: daaru
+org: daaru
+description: Meta Component to wrap other components
+keywords: aws, serverless, ssm
+repo: https://github.com/daaru00/serverless-component-meta
+readme: ''
+license: MIT
+main: ./src

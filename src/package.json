@@ -1,0 +1,22 @@
+{
+  "name": "@serverless/meta-src",
+  "version": "1.0.0",
+  "main": "./serverless.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "deploy": "serverless deploy --debug",
+    "remove": "serverless remove --debug",
+    "publish": "serverless registry publish",
+    "publish:dev": "serverless registry publish --dev",
+    "lint": "eslint . --fix --cache"
+  },
+  "author": "Fabio Gollinucci <fbgolly@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@serverless/platform-client": "^0.24.0",
+    "glob": "^7.1.6"
+  },
+  "devDependencies": {}
+}
