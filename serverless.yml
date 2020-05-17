@@ -1,5 +1,5 @@
 org: daaru
-app: test3-meta
+app: test4-meta
 name: meta
 component: meta@dev
 stage: dev
