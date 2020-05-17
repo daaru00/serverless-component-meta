@@ -181,8 +181,50 @@ inputs:
               handler: index.handler
 ```
 
+You can also deploy multiple components with the same configurations but different names:
+
+```yml
+# serverless.yml
+
+#..
+
+inputs:
+  globals:
+    component: aws-lambda
+    src: ./services/
+    handler: index.handler
+  components:
+    - my-lambda
+    - my-other-lambda
+    - my-an-other-one-lambda
+```
+
+By default `region`,`org`,`app`,`stage` are inherited from the main components but can also be override using globals:
+
+```yml
+# serverless.yml
+
+component: meta
+name: myCollection
+org: daaru
+app: myApp
+stage: dev
+
+inputs:
+  globals:
+    app: myOtherApp   # components will be deployed into different app
+    stage: staging    # and also into different stage
+    org: myOrg        # or even a different organization
+  components:
+    my-lambda:
+      component: aws-lambda
+      inputs:
+        src: ./my-service/
+        handler: index.handler
+```
+
 NOTE: At the moment the `src` property is not transformed or re-based. 
-All paths are relative where deploy is triggered.
+All paths are relative from directory where deploy is triggered.
 
 ### 4. Deploy
 

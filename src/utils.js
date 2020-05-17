@@ -97,11 +97,11 @@ const prepareInputs = (component, inputs, instance) => {
   inputs.globals.region = inputs.globals.region || instance.region
 
   return {
-    org: component.org || instance.org,
-    app: component.app || instance.app,
-    component: component.component,
+    org: component.org || inputs.globals.org || instance.org,
+    app: component.app || inputs.globals.app || instance.app,
+    component: component.component || inputs.globals.component,
     name: component.name,
-    stage: component.stage || instance.stage,
+    stage: component.stage || inputs.globals.stage || instance.stage,
     inputs: Object.assign({}, inputs.globals, component.inputs, {
       // also add globalInputs property, in case component is injected recursively
       globals: inputs.globals
