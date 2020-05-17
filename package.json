@@ -10,7 +10,8 @@
     "remove": "serverless remove --debug",
     "publish": "serverless registry publish",
     "publish:dev": "serverless registry publish --dev",
-    "lint": "eslint . --fix --cache"
+    "lint": "eslint . --fix --cache",
+    "postinstall": "cd src && npm install"
   },
   "author": "Fabio Gollinucci <fbgolly@gmail.com>",
   "license": "MIT",
