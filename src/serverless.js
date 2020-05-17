@@ -6,33 +6,24 @@ const {
   prepareInputs,
   arrayToObject,
   log,
-  logError
+  prepareComponentsList
 } = require('./utils')
 
-class AwsSSMDocument extends Component {
+const slsConfig = {
+  debug: true
+}
+
+class MetaComponent extends Component {
   /**
    * Deploy
    * @param {*} inputs
    */
   async deploy(inputs = {}) {
-    // Serverless deploy
-    const sdk = getServerlessSdk(inputs.accessKey, this.org)
+    // Serverless SDK
+    const sdk = getServerlessSdk(inputs.accessKey || process.env.SERVERLESS_ACCESS_KEY, this.org)
 
     // Load components
-    let { components } = inputs
-    if (Array.isArray(inputs.components)) {
-      components = arrayToObject(inputs.components)
-    } else if (typeof inputs.components === 'object') {
-      // set components names
-      for (const componentName in inputs.components) {
-        // if not already set
-        if (components[componentName] && !components[componentName].name) {
-          components[componentName].name = componentName
-        }
-      }
-    } else {
-      throw new Error(`Cannot parse "components" inputs.`)
-    }
+    let components = prepareComponentsList(inputs)
 
     // Automatically find components files
     if (inputs.autoDiscovery) {
@@ -52,7 +43,7 @@ class AwsSSMDocument extends Component {
       const options = prepareInputs(component, inputs, this)
       deployPromises.push(
         sdk
-          .deploy(options)
+          .deploy(options, this.credentials, slsConfig)
           .then((response) => {
             log(`Component ${component.name} deployed successfully!`)
             return response
@@ -74,14 +65,18 @@ class AwsSSMDocument extends Component {
         log(`Removing component ${component.name}..`)
         removePromises.push(
           sdk
-            .remove({
-              org: component.org || this.org,
-              app: component.app || this.app,
-              component: component.component || this.component,
-              name: component.name,
-              stage: component.stage || this.stage,
-              inputs: component.inputs
-            })
+            .remove(
+              {
+                org: component.org || this.org,
+                app: component.app || this.app,
+                component: component.component || this.component,
+                name: component.name,
+                stage: component.stage || this.stage,
+                inputs: component.inputs
+              },
+              this.credentials,
+              slsConfig
+            )
             .then(() => {
               log(`Component ${component.name} removed successfully!`)
             })
@@ -94,8 +89,9 @@ class AwsSSMDocument extends Component {
     const instances = await Promise.all(deployPromises)
 
     // Update state
+    this.state.outputs = this.state.outputs || {}
     for (const instance of instances) {
-      this.state.outputs[instance.outputs.name] = instance
+      this.state.outputs[instance.name] = instance
     }
 
     // Export outputs
@@ -107,33 +103,36 @@ class AwsSSMDocument extends Component {
    * @param {*} inputs
    */
   async remove(inputs = {}) {
-    const components = inputs.components || this.state.outputs
+    let components = inputs.components || this.state.outputs
     if (!components) {
-      throw new Error(`No components found. Components appears removed already`)
+      throw new Error(`No components found. Components seems already removed`)
     }
+    components = prepareComponentsList({ components })
 
-    // Serverless deploy
+    // Serverless SDK
     const sdk = getServerlessSdk(inputs.accessKey, this.org)
 
     // remove components
-    for (const component of components) {
-      log(`Removing component ${component}..`)
+    for (const componentName in components) {
+      const component = components[componentName]
+      log(`Removing component ${component.name}..`)
       const removePromises = []
       removePromises.push(
         sdk
-          .remove({
-            org: component.org || this.org,
-            app: component.app || this.app,
-            component: component.component || this.component,
-            name: component.name,
-            stage: component.stage || this.stage,
-            inputs: component.inputs
-          })
+          .remove(
+            {
+              org: component.org || this.org,
+              app: component.app || this.app,
+              component: component.component || this.component,
+              name: component.name,
+              stage: component.stage || this.stage,
+              inputs: component.inputs
+            },
+            this.credentials,
+            slsConfig
+          )
           .then(() => {
-            log(`Component ${component} deployed successfully!`)
-          })
-          .catch((err) => {
-            logError(`Error during component ${component} remove: ${err.message}`)
+            log(`Component ${component.name} removed successfully!`)
           })
       )
     }
@@ -143,4 +142,4 @@ class AwsSSMDocument extends Component {
   }
 }
 
-module.exports = AwsSSMDocument
+module.exports = MetaComponent

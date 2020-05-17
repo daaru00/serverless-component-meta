@@ -43,11 +43,13 @@ app: myApp                       # (optional) serverless dashboard app. default 
 stage: dev                       # (optional) serverless dashboard stage. default is dev.
 
 inputs:
-  src: .                                # (required) upload definition files
-  autoDiscovery: './**/serverless.yml'  # (optional) find serverless components declaration files using file glob
-  globalInputs:                         # (required)  global inputs will be merged into sub-components
+  accessKey: "${env:SERVERLESS_ACCESS_KEY}" # (optional) Serverless Access key used to deploy components
+  region: us-east-1                         # (optional) aws region to deploy to. default is us-east-1.
+  src: .                                    # (required) upload definition files
+  autoDiscovery: './**/serverless.yml'      # (optional) find serverless components declaration files using file glob
+  globalInputs:                             # (required)  global inputs will be merged into sub-components
     prop: value
-  components:                           # (required) components list
+  components:                 # (required) components list
     - component: aws-lambda
       name: my-lambda
       inputs:
@@ -167,12 +169,14 @@ inputs:
           my-lambda2:
             component: aws-lambda
             inputs:
+              name: my-lambda
               src: ./my-other-service/
               handler: index.handler
 
           my-lambda3:
             component: aws-lambda
             inputs:
+              name: my-other-lambda
               src: ./my-other-service2/
               handler: index.handler
 ```
@@ -196,7 +200,7 @@ $ serverless deploy --debug
 
 ### 5. Info
 
-Anytime you need to know more about your created `aws-ssm-document` instance, you can run the following command to view the most info. 
+Anytime you need to know more about your created components sub sub-components, you can run the following command to view the most info. 
 
 ```
 $ serverless info
@@ -204,7 +208,7 @@ $ serverless info
 
 ### 6. Remove
 
-If you wanna tear down your entire `aws-ssm-document` infrastructure that was created during deployment, just run the following command in the directory containing the `serverless.yml` file. 
+If you wanna tear down your created components and sub-components that was created during deployment, just run the following command in the directory containing the `serverless.yml` file. 
 ```
 $ serverless remove
 ```

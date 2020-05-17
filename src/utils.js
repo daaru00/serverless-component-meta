@@ -20,10 +20,14 @@ const logError = (msg) => console.error(msg) // eslint-disable-line
  */
 const arrayToObject = (array, obj = {}) => {
   return array.reduce((previousValue, currentValue) => {
-    if (!currentValue || !currentValue.name) {
-      return previousValue
+    if (currentValue.name) {
+      previousValue[currentValue.name] = currentValue
     }
-    previousValue[currentValue.name] = currentValue
+    if (typeof currentValue === 'string') {
+      previousValue[currentValue] = {
+        name: currentValue
+      }
+    }
     return previousValue
   }, obj)
 }
@@ -90,6 +94,7 @@ const loadComponentFile = (file) => {
  */
 const prepareInputs = (component, inputs, instance) => {
   inputs.globals = inputs.globals || {}
+  inputs.globals.region = inputs.globals.region || instance.region
 
   return {
     org: component.org || instance.org,
@@ -105,6 +110,28 @@ const prepareInputs = (component, inputs, instance) => {
 }
 
 /**
+ * Prepare components list
+ * @param {object} inputs
+ */
+const prepareComponentsList = (inputs) => {
+  let { components } = inputs
+  if (Array.isArray(components)) {
+    components = arrayToObject(components)
+  } else if (typeof components === 'object') {
+    // set components names
+    for (const componentName in components) {
+      // if not already set
+      if (components[componentName] && !components[componentName].name) {
+        components[componentName].name = componentName
+      }
+    }
+  } else {
+    throw new Error(`Cannot parse "components" inputs.`)
+  }
+  return components
+}
+
+/**
  * Exports
  */
 module.exports = {
@@ -114,5 +141,6 @@ module.exports = {
   getServerlessSdk,
   findFiles,
   loadComponentFile,
-  prepareInputs
+  prepareInputs,
+  prepareComponentsList
 }
